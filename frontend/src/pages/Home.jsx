@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Briefcase, ArrowRight } from "lucide-react";
+import { GraduationCap, Briefcase, ArrowRight, Plus } from "lucide-react";
+import { useState } from "react";
+import ContactAdminModal from "../components/ContactAdminModal";
 
 export default function Home() {
+  const [showContactModal, setShowContactModal] = useState(false);
+
   return (
     <div className="space-y-8">
       {/* Hero (same gradient style as InternType header) */}
@@ -27,6 +31,13 @@ export default function Home() {
           >
             Browse Job Vacancies <ArrowRight size={18} />
           </Link>
+
+          <button
+            onClick={() => setShowContactModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500 px-5 py-3 font-bold text-slate-900 hover:bg-fuchsia-400"
+          >
+            Add Vacancies <Plus size={18} />
+          </button>
         </div>
       </section>
 
@@ -95,6 +106,11 @@ export default function Home() {
           Go to Employer Dashboard <ArrowRight size={18} />
         </Link>
       </section>
+
+      <ContactAdminModal 
+        isOpen={showContactModal} 
+        onClose={() => setShowContactModal(false)} 
+      />
     </div>
   );
 }

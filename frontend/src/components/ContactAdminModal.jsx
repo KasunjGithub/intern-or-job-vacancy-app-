@@ -14,14 +14,14 @@ export default function ContactAdminModal({ isOpen, onClose }) {
     {
       icon: Phone,
       label: "Phone",
-      value: "+1 (555) 123-4567",
+      value: "0714973535",
       action: () => window.open("tel:+15551234567"),
       color: "text-green-400 bg-green-500/20 ring-green-400/20"
     },
     {
       icon: MessageCircle,
       label: "WhatsApp",
-      value: "+1 (555) 123-4567",
+      value: "0776542344",
       action: () => window.open("https://wa.me/15551234567?text=Hi, I want to add company vacancies"),
       color: "text-emerald-400 bg-emerald-500/20 ring-emerald-400/20"
     }

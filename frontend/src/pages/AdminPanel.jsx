@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Search, Filter } from "lucide-react";
 
 import { useAdminAuth } from "../state/adminAuth.jsx";
 import {
@@ -127,6 +128,11 @@ export default function AdminPanel() {
 
   const [tab, setTab] = useState("interns"); // interns | jobs | applications | settings
   const [store, setStore] = useState(loadStore());
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedMode, setSelectedMode] = useState("");
 
   const [form, setForm] = useState({
     id: "",
@@ -138,10 +144,22 @@ export default function AdminPanel() {
     value: "",
   });
 
-  const list = useMemo(
-    () => (tab === "interns" ? store.internships : store.jobs),
-    [store, tab]
-  );
+  const list = useMemo(() => {
+    const items = tab === "interns" ? store.internships : store.jobs;
+    
+    // Apply search and filters
+    return items.filter(item => {
+      const matchesSearch = 
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.location && item.location.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesType = !selectedType || item.type === selectedType;
+      const matchesMode = !selectedMode || item.mode === selectedMode;
+      
+      return matchesSearch && matchesType && matchesMode;
+    });
+  }, [store, tab, searchTerm, selectedType, selectedMode]);
 
   const resetForm = () =>
     setForm({
@@ -416,7 +434,53 @@ export default function AdminPanel() {
 
           {/* List */}
           <div className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10">
-            <h2 className="text-xl font-bold text-cyan-300">Current Items</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-cyan-300">Current Items</h2>
+              <span className="text-sm text-white/70">
+                Showing {list.length} of {(tab === "interns" ? store.internships : store.jobs).length} items
+              </span>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="grid gap-3 md:grid-cols-3 mb-6">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search title, company, location..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-xl bg-black/40 pl-9 pr-3 py-2 text-sm text-white placeholder-white/50 ring-1 ring-white/10 focus:ring-2 focus:ring-cyan-400/50"
+                />
+              </div>
+
+              {/* Type Filter */}
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:ring-2 focus:ring-cyan-400/50"
+              >
+                <option value="">All Types</option>
+                {(tab === "interns" ? INTERN_TYPES : JOB_TYPES).map(type => (
+                  <option key={type} value={type} className="bg-slate-800">
+                    {type}
+                  </option>
+                ))}
+              </select>
+
+              {/* Mode Filter */}
+              <select
+                value={selectedMode}
+                onChange={(e) => setSelectedMode(e.target.value)}
+                className="rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:ring-2 focus:ring-cyan-400/50"
+              >
+                <option value="">All Modes</option>
+                <option value="Remote" className="bg-slate-800">Remote</option>
+                <option value="On-site" className="bg-slate-800">On-site</option>
+                <option value="Hybrid" className="bg-slate-800">Hybrid</option>
+              </select>
+            </div>
 
             <div className="mt-4 space-y-3">
               {list.map((x) => (
@@ -464,7 +528,14 @@ export default function AdminPanel() {
                 </div>
               ))}
               
-              {list.length === 0 && (
+              {list.length === 0 && searchTerm && (
+                <div className="text-center py-8 text-white/50">
+                  <p>No items found matching "{searchTerm}".</p>
+                  <p className="text-sm mt-1">Try adjusting your search or filters.</p>
+                </div>
+              )}
+              
+              {list.length === 0 && !searchTerm && (
                 <div className="text-center py-8 text-white/50">
                   <p>No {tab === "interns" ? "internships" : "jobs"} added yet.</p>
                   <p className="text-sm mt-1">Use the form above to add your first {tab === "interns" ? "internship" : "job"}.</p>

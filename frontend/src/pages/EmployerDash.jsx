@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "../lib/api.js";
-import { useAuth } from "../state/auth.jsx";
 import { Briefcase, Users, Eye, Plus, Edit, Trash2, BarChart3, TrendingUp } from "lucide-react";
 
 export default function EmployerDash() {
-  const qc = useQueryClient();
-  const { token, user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   const [job, setJob] = useState({
@@ -19,28 +14,7 @@ export default function EmployerDash() {
     salary: ""
   });
 
-  const jobsQuery = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => apiFetch("/api/jobs")
-  });
-
-  const createJob = useMutation({
-    mutationFn: () =>
-      apiFetch("/api/jobs", {
-        token,
-        method: "POST",
-        body: {
-          ...job,
-          tags: job.tags.split(",").map((s) => s.trim()).filter(Boolean)
-        }
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["jobs"] });
-      setJob({ ...job, title: "", description: "", salary: "" });
-    }
-  });
-
-  // Mock data for employer analytics
+  // Mock data that works without backend
   const employerStats = {
     totalJobs: 12,
     activeJobs: 8,
@@ -50,7 +24,21 @@ export default function EmployerDash() {
       { id: 1, name: "John Doe", position: "Frontend Developer", date: "2024-01-15" },
       { id: 2, name: "Jane Smith", position: "Backend Developer", date: "2024-01-14" },
       { id: 3, name: "Mike Johnson", position: "UI/UX Designer", date: "2024-01-13" }
+    ],
+    myJobs: [
+      { id: 1, title: "Senior React Developer", company: "TechCorp", location: "Remote", type: "full-time", tags: ["React", "Node.js", "MongoDB"] },
+      { id: 2, title: "UI/UX Designer", company: "DesignStudio", location: "New York", type: "contract", tags: ["Figma", "Adobe", "Sketch"] },
+      { id: 3, title: "Backend Developer Intern", company: "StartupXYZ", location: "San Francisco", type: "internship", tags: ["Python", "Django", "PostgreSQL"] }
     ]
+  };
+
+  const handlePostJob = () => {
+    if (!job.title || !job.companyName) {
+      alert("Please fill in title and company name");
+      return;
+    }
+    alert("Job posted successfully! (Demo mode)");
+    setJob({ ...job, title: "", description: "", salary: "" });
   };
 
   const StatCard = ({ title, value, icon: Icon, color = "cyan" }) => {
@@ -81,7 +69,7 @@ export default function EmployerDash() {
       {/* Header */}
       <div className="rounded-3xl bg-gradient-to-r from-cyan-500/25 via-fuchsia-500/20 to-amber-500/20 p-6 ring-1 ring-white/10">
         <h1 className="text-3xl font-extrabold text-cyan-300">Employer Dashboard</h1>
-        <p className="text-white/70 mt-2">Welcome back, {user?.name || "Employer"}! Manage your job postings and track applications.</p>
+        <p className="text-white/70 mt-2">Welcome back! Manage your job postings and track applications.</p>
       </div>
 
       {/* Tabs */}
@@ -207,14 +195,11 @@ export default function EmployerDash() {
               />
 
               <button
-                onClick={() => createJob.mutate()}
-                className="w-full rounded-xl bg-cyan-500 py-3 font-bold text-black hover:bg-cyan-400 transition disabled:opacity-50"
-                disabled={createJob.isPending}
+                onClick={handlePostJob}
+                className="w-full rounded-xl bg-cyan-500 py-3 font-bold text-black hover:bg-cyan-400 transition"
               >
-                {createJob.isPending ? "Posting..." : "Post Job"}
+                Post Job
               </button>
-              {createJob.error && <p className="text-sm text-red-400">{createJob.error.message}</p>}
-              {createJob.data && <p className="text-sm text-green-400">Job posted successfully!</p>}
             </div>
           </section>
 
@@ -243,24 +228,20 @@ export default function EmployerDash() {
         <section className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10">
           <h2 className="text-xl font-bold text-white mb-4">Manage Your Jobs</h2>
           <div className="space-y-3">
-            {jobsQuery.isLoading && <p className="text-sm text-white/70">Loading...</p>}
-            {jobsQuery.error && <p className="text-sm text-red-400">{jobsQuery.error.message}</p>}
-            {(jobsQuery.data || []).map((j) => (
-              <div key={j._id} className="rounded-xl bg-black/40 p-4 ring-1 ring-white/10">
+            {employerStats.myJobs.map((j) => (
+              <div key={j.id} className="rounded-xl bg-black/40 p-4 ring-1 ring-white/10">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="font-semibold text-white text-lg">{j.title}</p>
-                    <p className="text-cyan-300 font-medium">{j.companyName}</p>
+                    <p className="text-cyan-300 font-medium">{j.company}</p>
                     <p className="text-sm text-white/70 mt-1">{j.location} • {j.type}</p>
-                    {j.tags && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {j.tags.slice(0, 3).map(tag => (
-                          <span key={tag} className="px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {j.tags.slice(0, 3).map(tag => (
+                        <span key={tag} className="px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex gap-2 ml-4">
                     <button className="rounded-xl bg-blue-500/20 px-3 py-2 text-blue-300 hover:bg-blue-500/30 transition flex items-center gap-1">
@@ -273,13 +254,6 @@ export default function EmployerDash() {
                 </div>
               </div>
             ))}
-            {(jobsQuery.data || []).length === 0 && (
-              <div className="text-center py-8 text-white/50">
-                <Briefcase size={48} className="mx-auto mb-4 text-white/30" />
-                <p>No jobs posted yet.</p>
-                <p className="text-sm mt-1">Start by posting your first job in the "Post Job" tab.</p>
-              </div>
-            )}
           </div>
         </section>
       )}

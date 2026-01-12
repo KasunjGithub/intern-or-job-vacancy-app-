@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Search, Filter } from "lucide-react";
+import Analytics from "./Analytics.jsx";
 
 import { useAdminAuth } from "../state/adminAuth.jsx";
 import {
@@ -10,6 +11,7 @@ import {
   Settings,
   Home,
   LayoutDashboard,
+  BarChart3,
 } from "lucide-react";
 
 const STORE_KEY = "admin_ads_store_v1";
@@ -126,7 +128,7 @@ function uid(prefix) {
 export default function AdminPanel() {
   const { logout, changeCreds, getUsername } = useAdminAuth();
 
-  const [tab, setTab] = useState("interns"); // interns | jobs | applications | settings
+  const [tab, setTab] = useState("interns"); // interns | jobs | applications | analytics | settings
   const [store, setStore] = useState(loadStore());
   
   // Search and filter states
@@ -311,6 +313,17 @@ export default function AdminPanel() {
         </button>
 
         <button
+          onClick={() => setTab("analytics")}
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 font-semibold transition-all ${
+            tab === "analytics"
+              ? "bg-purple-500 text-black"
+              : "bg-white/10 text-white hover:bg-white/20"
+          }`}
+        >
+          <BarChart3 size={18} /> Analytics
+        </button>
+
+        <button
           onClick={() => setTab("settings")}
           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 font-semibold transition-all ${
             tab === "settings"
@@ -358,6 +371,8 @@ export default function AdminPanel() {
         </form>
       ) : tab === "applications" ? (
         <ApplicationsTab />
+      ) : tab === "analytics" ? (
+        <Analytics />
       ) : (
         <>
           {/* Form */}
